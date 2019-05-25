@@ -33,3 +33,9 @@ BERT'in servis olarak kullanildigi pakete ihtiyaci var calismak icin.
 python3 bert.py
 ```
 
+##### CHARACTER NGRAM
+karakter ngram benzerligi yontemi. cumle-paragraf ve cumle-cumle olmak uzere iki yontem var.
+
+```
+python3 char-ngram.py
+```
