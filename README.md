@@ -15,15 +15,17 @@ Vektore cevirdigi metinlerin farkli siniflandiricilar ile  benzerlik olasiligini
 ```
 python3 preprocess.py
 ```
+output: results.json
 
 
 ##### SCIKIT SENTENCES
 
-Paragraflari cumlelere ayirip bir onceki ile ayni islemi yapicak. ** daha bitmedi
+Paragraflari cumlelere ayirip bir onceki ile ayni islemi yapiyor.
 
 ```
 python3 preprocess.py
 ```
+output: results-sentences.json
 
 
 ##### BERT

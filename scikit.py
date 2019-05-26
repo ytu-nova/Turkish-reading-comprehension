@@ -72,12 +72,14 @@ def process_data(q, doSaitize):
     test = tfidf.transform([test])
     return data, labels, test
 
-
+results = []
 corrects = {'nb': 0, 'sgd': 0, 'rf': 0, 'lr': 0, 'kn': 0}
 sim = {'nb': 0, 'sgd': 0, 'rf': 0, 'lr': 0, 'kn': 0}
 unsim = {'nb': 0, 'sgd': 0, 'rf': 0, 'lr': 0, 'kn': 0}
 simCount = 0
 unsimCount = 0
+
+
 
 with open('data.json') as json_file:
     data = json.load(json_file)
@@ -89,8 +91,16 @@ with open('data.json') as json_file:
         else:
             unsimCount += 1
 
+        result = {'no': q['no'], 'isSimilarity': q['isSimilarity'],
+                  'nb': False,
+                  'sgd': False,
+                  'rf': False,
+                  'lr': False,
+                  'kn': False}
+
         answer = nb(data, labels, test, q['isSimilarity'])
         if answer == q['correct']:
+            result['nb'] = True
             corrects['nb'] += 1
             if q['isSimilarity']:
                 sim['nb'] += 1
@@ -99,6 +109,7 @@ with open('data.json') as json_file:
 
         answer = sgd(data, labels, test, q['isSimilarity'])
         if answer == q['correct']:
+            result['sgd'] = True
             corrects['sgd'] += 1
             if q['isSimilarity']:
                 sim['sgd'] += 1
@@ -107,6 +118,7 @@ with open('data.json') as json_file:
 
         answer = rf(data, labels, test, q['isSimilarity'])
         if answer == q['correct']:
+            result['rf'] = True
             corrects['rf'] += 1
             if q['isSimilarity']:
                 sim['rf'] += 1
@@ -115,6 +127,7 @@ with open('data.json') as json_file:
 
         answer = lr(data, labels, test, q['isSimilarity'])
         if answer == q['correct']:
+            result['lr'] = True
             corrects['lr'] += 1
             if q['isSimilarity']:
                 sim['lr'] += 1
@@ -123,11 +136,14 @@ with open('data.json') as json_file:
 
         answer = kn(data, labels, test, q['isSimilarity'])
         if answer == q['correct']:
+            result['kn'] = True
             corrects['kn'] += 1
             if q['isSimilarity']:
                 sim['kn'] += 1
             else:
                 unsim['kn'] += 1
+
+        results.append(result)
 
         if simCount > 0 and unsimCount > 0:
             count = int(q['no'])
@@ -138,6 +154,9 @@ with open('data.json') as json_file:
                 , 'lr': corrects['lr'] / count, 'lr-sim': sim['lr'] / simCount, 'lr-unsim': unsim['lr'] / unsimCount
                 , 'kn': corrects['kn'] / count, 'kn-sim': sim['kn'] / simCount, 'kn-unsim': unsim['kn'] / unsimCount}
             print(count, end='\r')
+
+    with open('results.json', 'w') as outfile:
+        json.dump(results, outfile)
 
     print('=================================================')
     print(log)
