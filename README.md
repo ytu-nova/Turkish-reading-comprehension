@@ -37,5 +37,12 @@ python3 bert.py
 karakter ngram benzerligi yontemi. cumle-paragraf ve cumle-cumle olmak uzere iki yontem var.
 
 ```
-python3 char-ngram.py
+python3 char_ngram.py
+```
+
+##### WORD2VEC
+cumlenin kelime vektoru ortalamasi alinip secenek ile paragraftaki cumlelerin uzakliklari karsilastiriliyor.
+
+```
+python3 word2vec_distance.py
 ```
