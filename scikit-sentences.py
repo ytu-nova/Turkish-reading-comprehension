@@ -13,13 +13,25 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
+def sentence_based_unsimilar(d):
+    # her secenege en cok benzeyen cumlenin indexini bulur
+    a = [ max(d[:,j]) for j in range(d.shape[1]) ]
+
+    # her secenegin kendisine en yakin cumleye olan benzerligi
+    v = [ a[j] for j in range(d.shape[1]) ]
+
+    return np.argmin(v)
+
+
 def nb(data, labels, test, isSimilarity):
     nb_clf = MultinomialNB()
     nb_clf.fit(data, labels)
 
     result = nb_clf.predict_proba(test)
+
     similar = labels[np.where(result == np.amax(result))[1][0]]
-    unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    # unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    unsimilar = labels[sentence_based_unsimilar(result)]
 
     return similar if isSimilarity else unsimilar
 
@@ -30,7 +42,8 @@ def sgd(data, labels, test, isSimilarity):
 
     result = sgd_clf.predict_proba(test)
     similar = labels[np.where(result == np.amax(result))[1][0]]
-    unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    # unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    unsimilar = labels[sentence_based_unsimilar(result)]
 
     return similar if isSimilarity else unsimilar
 
@@ -41,7 +54,8 @@ def rf(data, labels, test, isSimilarity):
 
     result = rf_clf.predict_proba(test)
     similar = labels[np.where(result == np.amax(result))[1][0]]
-    unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    # unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    unsimilar = labels[sentence_based_unsimilar(result)]
 
     return similar if isSimilarity else unsimilar
 
@@ -52,7 +66,8 @@ def lr(data, labels, test, isSimilarity):
 
     result = lr_clf.predict_proba(test)
     similar = labels[np.where(result == np.amax(result))[1][0]]
-    unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    # unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    unsimilar = labels[sentence_based_unsimilar(result)]
 
     return similar if isSimilarity else unsimilar
 
@@ -63,7 +78,8 @@ def kn(data, labels, test, isSimilarity):
 
     result = kn_clf.predict_proba(test)
     similar = labels[np.where(result == np.amax(result))[1][0]]
-    unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    # unsimilar = labels[np.where(result == np.amin(result))[1][0]]
+    unsimilar = labels[sentence_based_unsimilar(result)]
 
     return similar if isSimilarity else unsimilar
 
