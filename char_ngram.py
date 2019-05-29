@@ -17,8 +17,22 @@ from pprint import pprint
 def lower_tr_utf8(s):
     return s.replace(u"I",u"ı").replace(u"İ", u"i").lower()
 
+def removePunctuation(s):
+    # return re.sub(r"[^a-zA-ZçöğüşıA-ZÇÖĞÜŞİ ]+", "", s)
+    return re.sub(r"[^a-zA-ZçöğüşıA-ZÇÖĞÜŞİ ]+", "_", s)
+
+def ngram_compare(a, b, N):
+    ngram = NGram(N=N)
+    A = set(ngram.ngrams(a))
+    B = set(ngram.ngrams(b))
+    return len(A & B) / len(A | B)
+
+
 def predict_char_ngram(N, paragraph, question, options, isSimilarity):
-    similarities = [NGram.compare(paragraph, s, N=N) for s in options]
+    paragraph = removePunctuation(paragraph)
+    options = [removePunctuation(x) for x in options]
+    # similarities = [NGram.compare(paragraph, s, N=N) for s in options]
+    similarities = [ngram_compare(paragraph, s, N=N) for s in options]
 
     if isSimilarity:
         prob = [x / sum(similarities) for x in similarities]
@@ -32,8 +46,11 @@ def predict_char_ngram_v2(N, paragraph, question, options, isSimilarity):
 
     d = np.zeros(shape=(len(sentences), len(options)))
     for i, sentence in enumerate(sentences):
-         for j, secenek in enumerate(options):
-             d[i, j] = NGram.compare(sentence, secenek, N=N)
+        sentence = removePunctuation(sentence)
+        for j, secenek in enumerate(options):
+            secenek = removePunctuation(secenek)
+            # d[i, j] = NGram.compare(sentence, secenek, N=N)
+            d[i, j] = ngram_compare(sentence, secenek, N=N)
 
     if isSimilarity:
         max_sim = len(options) * [0]
@@ -68,6 +85,7 @@ def char_ngram(data, N=4, sentenceComparison=False):
     correctAnswers = set()
 
     for qNo, q in enumerate(data):
+        print(qNo+1, end='\r')
         paragraph = q["paragraph"]
         question = q["text"]
         isSimilarity = q["isSimilarity"]
@@ -98,9 +116,10 @@ def char_ngram(data, N=4, sentenceComparison=False):
             else:
                 pass # len(correctAnswers) - correctSimQuestion
 
+        # print("basari: %.2f" % (float(len(correctAnswers)) / (qNo+1)))
+
     notSimQuestionCount = len(data) - simQuestionCount
     correctNotSimQuestion = len(correctAnswers) - correctSimQuestion
-
 
     if simQuestionCount > 0:
         print("olumlu basari: %.2f (%d / %d)" % (float(correctSimQuestion) / simQuestionCount, correctSimQuestion, simQuestionCount))
@@ -114,7 +133,9 @@ def char_ngram(data, N=4, sentenceComparison=False):
 if __name__ == "__main__":
     data = json.load(open('data.json', encoding="utf-8"))
     print("\nchar_ngram N=4, sentenceComparison=False")
-    char_ngram(data, N=4, sentenceComparison=False)
+    a = char_ngram(data, N=4, sentenceComparison=False)
 
     print("\nchar_ngram N=4, sentenceComparison=True")
-    char_ngram(data, N=4, sentenceComparison=True)
+    b = char_ngram(data, N=4, sentenceComparison=True)
+    print(len(a - b))
+    print(len(b - a))
