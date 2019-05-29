@@ -14,12 +14,8 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def sentence_based_unsimilar(d):
-    # her secenege en cok benzeyen cumlenin indexini bulur
-    a = [ max(d[:,j]) for j in range(d.shape[1]) ]
-
-    # her secenegin kendisine en yakin cumleye olan benzerligi
-    v = [ a[j] for j in range(d.shape[1]) ]
-
+    # her secenek icin, kendisine en cok benzeyen cumleye olan benzerlik degeri
+    v = [ max(d[:,j]) for j in range(d.shape[1]) ]
     return np.argmin(v)
 
 
