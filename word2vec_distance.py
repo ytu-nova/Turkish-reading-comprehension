@@ -5,6 +5,23 @@ import re
 from scipy import spatial
 import os
 import lzma
+from gensim.models import Word2Vec, KeyedVectors
+import io
+
+VECTOR_SIZE = 300
+
+def load_vectors(fname):
+    fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+    n, d = map(int, fin.readline().split())
+    data = {}
+    for i, line in enumerate(fin):
+        print("%d / %d" % (i, n), end="\r")
+        tokens = line.rstrip().split(' ')
+        # data[tokens[0]] = tuple(tokens[1:])
+        # data[tokens[0]] = " ".join(tokens[1:])
+        data[tokens[0]] = tuple(map(float, tokens[1:]))
+
+    return data
 
 # from sklearn.metrics import jaccard_similarity_score
 
@@ -23,17 +40,18 @@ def distance(A, B):
 
 
 def sentenceVector(w2v, s):
-    paragraphVector = np.zeros(100)
+    paragraphVector = np.zeros(VECTOR_SIZE)
     for i, word in enumerate(s.split(" ")):
-        paragraphVector += w2v.get(word, np.zeros(100))
         if word not in w2v:
             # kelime yoksa sondan harf silerek bakiyoruz
             for j in range(len(word)-1, 3, -1):
                 if word[:j] in w2v:
-                    paragraphVector += w2v.get(word[:j])
+                    paragraphVector += np.array(w2v[word[:j]])
                     break
+        else:
+            paragraphVector += np.array(w2v[word])
     if i == 0:
-        return np.zeros(100)
+        return np.zeros(VECTOR_SIZE)
     return paragraphVector / i
 
 
@@ -81,26 +99,29 @@ def word2vec_distance(vectorFilePath, data):
 
     SAVE_VECTOR_DICT = False
 
-    try:
-        if SAVE_VECTOR_DICT:
-            w2v = pickle.load(open("/tmp/word2vec-distance.pickle", "rb"))
-        else:
-            raise
-    except:
-        w2v = dict()
-        print("loading word vectors: %s" % vectorFilePath)
-        lines = sum(1 for line in open(vectorFilePath, encoding="utf8"))
-        for i, line in enumerate(open(vectorFilePath, encoding="utf8")):
-            if i % 10000 == 0:
-                print("%d / %d" % (i, lines))
-            index = line.find(" ")
-            word = line[:index]
-            vectorStr = line[index+1:]
-            vector = np.array([float(x) for x in vectorStr.split()])
-            w2v[word] = vector
+    # try:
+    #     if SAVE_VECTOR_DICT:
+    #         w2v = pickle.load(open("/tmp/word2vec-distance.pickle", "rb"))
+    #     else:
+    #         raise
+    # except:
+    #     w2v = dict()
+    #     print("loading word vectors: %s" % vectorFilePath)
+    #     lines = sum(1 for line in open(vectorFilePath, encoding="utf8"))
+    #     for i, line in enumerate(open(vectorFilePath, encoding="utf8")):
+    #         print("%d / %d" % (i, lines), end='\r')
+    #         index = line.find(" ")
+    #         word = line[:index]
+    #         vectorStr = line[index+1:]
+    #         vector = np.array([float(x) for x in vectorStr.split()])
+    #         w2v[word] = vector
+    #     if SAVE_VECTOR_DICT:
+    #         pickle.dump(w2v, open("/tmp/word2vec-distance.pickle", "wb"))
 
-        if SAVE_VECTOR_DICT:
-            pickle.dump(w2v, open("/tmp/word2vec-distance.pickle", "wb"))
+    w2v = load_vectors("_tmp/wiki.tr.vec")
+
+    # w2v = Word2Vec.load("./_tmp/trmodel")
+    # w2v = KeyedVectors.load_word2vec_format('./_tmp/trmodel', binary=True)
 
     simQuestionCount = 0
     correctSimQuestion = 0
@@ -166,5 +187,7 @@ if __name__ == "__main__":
         print("extracting %s" % vectorFilePathXz)
         open(vectorFilePath, "w", encoding="utf-8").write(lzma.open(vectorFilePathXz).read().decode("utf-8"))
 
-    data = json.load(open('data.json', encoding="utf-8"))
+    # data = json.load(open('data.json', encoding="utf-8"))
+    data = json.load(open('data-yeniSorular.json', encoding="utf-8"))
+
     word2vec_distance(vectorFilePath, data)

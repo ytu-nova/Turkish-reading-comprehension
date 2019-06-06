@@ -14,12 +14,19 @@ from ngram import NGram
 import re
 from pprint import pprint
 
+def sanitize(t):
+    return re.sub(r'[^a-zğüşıöç\s+]|\n|\t|\r', '', t.lower(), flags=re.IGNORECASE)
+
+
+# ngram v2: https://stackoverflow.com/questions/14059444/python-ngram-calculation
+
 def lower_tr_utf8(s):
-    return s.replace(u"I",u"ı").replace(u"İ", u"i").lower()
+    return s  # FIXME: bu fonksiyona gerek yok galiba
+    # return s.replace(u"I",u"ı").replace(u"İ", u"i").lower()
 
 def removePunctuation(s):
-    # return re.sub(r"[^a-zA-ZçöğüşıA-ZÇÖĞÜŞİ ]+", "", s)
-    return re.sub(r"[^a-zA-ZçöğüşıA-ZÇÖĞÜŞİ ]+", "_", s)
+    return sanitize(s)
+    # return re.sub(r"[^a-zA-ZçöğüşıA-ZÇÖĞÜŞİ ]+", "_", s)
 
 def ngram_compare(a, b, N):
     ngram = NGram(N=N)
@@ -32,7 +39,8 @@ def predict_char_ngram(N, paragraph, question, options, isSimilarity):
     paragraph = removePunctuation(paragraph)
     options = [removePunctuation(x) for x in options]
     # similarities = [NGram.compare(paragraph, s, N=N) for s in options]
-    similarities = [ngram_compare(paragraph, s, N=N) for s in options]
+    # similarities = [ngram_compare(paragraph, s, N=N) for s in options]
+    similarities = [NGram.compare(paragraph, s, N=N, pad_len=0) for s in options]
 
     if isSimilarity:
         prob = [x / sum(similarities) for x in similarities]
@@ -51,8 +59,10 @@ def predict_char_ngram_v2(N, paragraph, question, options, isSimilarity):
             secenek = removePunctuation(secenek)
             # d[i, j] = NGram.compare(sentence, secenek, N=N)
             d[i, j] = ngram_compare(sentence, secenek, N=N)
+            # d[i, j] = NGram.compare(sentence, secenek, N=N, pad_len=0)
 
     if isSimilarity:
+
         max_sim = len(options) * [0]
         for i in range(len(sentences)):
             for j in range(len(options)):
@@ -85,7 +95,7 @@ def char_ngram(data, N=4, sentenceComparison=False):
     correctAnswers = set()
 
     for qNo, q in enumerate(data):
-        print(qNo+1, end='\r')
+        # print(qNo+1, end='\r')
         paragraph = q["paragraph"]
         question = q["text"]
         isSimilarity = q["isSimilarity"]
@@ -122,20 +132,29 @@ def char_ngram(data, N=4, sentenceComparison=False):
     correctNotSimQuestion = len(correctAnswers) - correctSimQuestion
 
     if simQuestionCount > 0:
-        print("olumlu basari: %.2f (%d / %d)" % (float(correctSimQuestion) / simQuestionCount, correctSimQuestion, simQuestionCount))
+        print("olumlu basari: %.2f (%d / %d)" % (100 * float(correctSimQuestion) / simQuestionCount, correctSimQuestion, simQuestionCount))
     if notSimQuestionCount > 0:
-        print("olumsuz basari: %.2f (%d / %d)" % (float(correctNotSimQuestion) / notSimQuestionCount, correctNotSimQuestion, notSimQuestionCount))
-    print("basari: %.2f" % (float(len(correctAnswers)) / len(data)))
+        print("olumsuz basari: %.2f (%d / %d)" % (100 * float(correctNotSimQuestion) / notSimQuestionCount, correctNotSimQuestion, notSimQuestionCount))
+    print("basari: %.2f" % (100 * float(len(correctAnswers)) / len(data)))
 
     return correctAnswers
 
 
 if __name__ == "__main__":
-    data = json.load(open('data.json', encoding="utf-8"))
-    print("\nchar_ngram N=4, sentenceComparison=False")
-    a = char_ngram(data, N=4, sentenceComparison=False)
+    for filePath in ('data.json', 'yenisorular/farkliYeniSorular.json'):
+        print("\n==============")
+        print(filePath)
 
-    print("\nchar_ngram N=4, sentenceComparison=True")
-    b = char_ngram(data, N=4, sentenceComparison=True)
-    print(len(a - b))
-    print(len(b - a))
+        data = json.load(open('yenisorular/farkliYeniSorular.json', encoding="utf-8"))
+
+        print("\nchar_ngram N=3, sentenceComparison=False")
+        char_ngram(data, N=3, sentenceComparison=False)
+
+        print("\nchar_ngram N=4, sentenceComparison=False")
+        char_ngram(data, N=4, sentenceComparison=False)
+
+        print("\nchar_ngram N=3, sentenceComparison=True")
+        char_ngram(data, N=3, sentenceComparison=True)
+
+        print("\nchar_ngram N=4, sentenceComparison=True")
+        char_ngram(data, N=4, sentenceComparison=True)
