@@ -62,7 +62,6 @@ def predict_char_ngram_v2(N, paragraph, question, options, isSimilarity):
             # d[i, j] = NGram.compare(sentence, secenek, N=N, pad_len=0)
 
     if isSimilarity:
-
         max_sim = len(options) * [0]
         for i in range(len(sentences)):
             for j in range(len(options)):
@@ -145,7 +144,7 @@ if __name__ == "__main__":
         print("\n==============")
         print(filePath)
 
-        data = json.load(open('yenisorular/farkliYeniSorular.json', encoding="utf-8"))
+        data = json.load(open(filePath, encoding="utf-8"))
 
         print("\nchar_ngram N=3, sentenceComparison=False")
         char_ngram(data, N=3, sentenceComparison=False)
