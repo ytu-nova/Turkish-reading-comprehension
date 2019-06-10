@@ -136,10 +136,19 @@ def char_ngram(data, N=4, sentenceComparison=False):
         print("olumsuz basari: %.2f (%d / %d)" % (100 * float(correctNotSimQuestion) / notSimQuestionCount, correctNotSimQuestion, notSimQuestionCount))
     print("basari: %.2f" % (100 * float(len(correctAnswers)) / len(data)))
 
-    return correctAnswers
+    return correctAnswers, np.array((correctSimQuestion, simQuestionCount, correctNotSimQuestion, notSimQuestionCount))
 
 
 if __name__ == "__main__":
+
+    # correctAnswers, correctSimQuestion, simQuestionCount, correctNotSimQuestion, notSimQuestionCount
+
+    parameters = ("paragraph-N3", "paragraph-N4", "sentence-N3", "sentence-N4")
+
+    results = dict()
+
+    results = { x:np.zeros((4,),dtype=int) for x in parameters }
+
     for filePath in ('data.json', 'yenisorular/farkliYeniSorular.json'):
         print("\n==============")
         print(filePath)
@@ -147,13 +156,38 @@ if __name__ == "__main__":
         data = json.load(open(filePath, encoding="utf-8"))
 
         print("\nchar_ngram N=3, sentenceComparison=False")
-        char_ngram(data, N=3, sentenceComparison=False)
+        _, r = char_ngram(data, N=3, sentenceComparison=False)
+        results["paragraph-N3"] += r
 
         print("\nchar_ngram N=4, sentenceComparison=False")
-        char_ngram(data, N=4, sentenceComparison=False)
+        _, r = char_ngram(data, N=4, sentenceComparison=False)
+        results["paragraph-N4"] += r
 
         print("\nchar_ngram N=3, sentenceComparison=True")
-        char_ngram(data, N=3, sentenceComparison=True)
+        _, r = char_ngram(data, N=3, sentenceComparison=True)
+        results["sentence-N3"] += r
 
         print("\nchar_ngram N=4, sentenceComparison=True")
-        char_ngram(data, N=4, sentenceComparison=True)
+        _, r = char_ngram(data, N=4, sentenceComparison=True)
+        results["sentence-N4"] += r
+
+    print("=================================================")
+
+    for p in parameters:
+        print(p)
+        correctSimQuestion, simQuestionCount, correctNotSimQuestion, notSimQuestionCount = (x.item() for x in results[p])
+
+        try:
+            print("olumlu basari: %.2f" % (100.0 * correctSimQuestion / simQuestionCount))
+            print("olumsuz basari: %.2f" % (100.0 * correctNotSimQuestion / notSimQuestionCount))
+            correctAnswers = correctSimQuestion + correctNotSimQuestion
+            questionCount = simQuestionCount + notSimQuestionCount
+            print("basari: %.2f" % (100.0 * correctAnswers / questionCount))
+        except ZeroDivisionError:
+            print("ZeroDivisionError")
+
+        print("")
+
+    print("simQuestionCount:", simQuestionCount)
+    print("notSimQuestionCount:", notSimQuestionCount)
+    print("total:", simQuestionCount+notSimQuestionCount)

@@ -8,9 +8,10 @@ import lzma
 from gensim.models import Word2Vec, KeyedVectors
 import io
 
-VECTOR_SIZE = 300
+VECTOR_SIZE = 100
 
 def load_vectors(fname):
+    print("loading vectors:", fname)
     fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
     n, d = map(int, fin.readline().split())
     data = {}
@@ -19,7 +20,10 @@ def load_vectors(fname):
         tokens = line.rstrip().split(' ')
         # data[tokens[0]] = tuple(tokens[1:])
         # data[tokens[0]] = " ".join(tokens[1:])
-        data[tokens[0]] = tuple(map(float, tokens[1:]))
+        try:
+            data[tokens[0]] = tuple(map(float, tokens[1:]))
+        except:
+            print("error", tokens[0])
 
     return data
 
@@ -118,10 +122,17 @@ def word2vec_distance(vectorFilePath, data):
     #     if SAVE_VECTOR_DICT:
     #         pickle.dump(w2v, open("/tmp/word2vec-distance.pickle", "wb"))
 
-    w2v = load_vectors("_tmp/wiki.tr.vec")
+    # w2v = load_vectors("_tmp/wiki.tr.vec")
 
-    # w2v = Word2Vec.load("./_tmp/trmodel")
+
+    # w2v = load_vectors("/mnt/odev-4/fasttext-vectors/haber_ve_koseyazilari-cbow-default.txt.vec")
+    w2v = load_vectors("/mnt/odev-4/fasttext-vectors/haber_ve_koseyazilari-skipgram-default.txt.vec")
+
+    # w2v = load_vectors("/mnt/odev-4/fasttext-vectors/tamami-cbow-default.txt.vec")
+    # w2v = load_vectors("/mnt/odev-4/fasttext-vectors/skipgram-cbow-default.txt.vec")
+
     # w2v = KeyedVectors.load_word2vec_format('./_tmp/trmodel', binary=True)
+
 
     simQuestionCount = 0
     correctSimQuestion = 0
@@ -187,7 +198,7 @@ if __name__ == "__main__":
         print("extracting %s" % vectorFilePathXz)
         open(vectorFilePath, "w", encoding="utf-8").write(lzma.open(vectorFilePathXz).read().decode("utf-8"))
 
-    # data = json.load(open('data.json', encoding="utf-8"))
-    data = json.load(open('data-yeniSorular.json', encoding="utf-8"))
+    data = json.load(open('data.json', encoding="utf-8"))
+    # data = json.load(open('yenisorular/farkliYeniSorular.json', encoding="utf-8"))
 
     word2vec_distance(vectorFilePath, data)
