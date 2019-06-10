@@ -69,7 +69,7 @@ def wordVectors_matrix_prob(w2v, paragraph, options, isSimilarity, vectorSize):
         sVector = sentenceVector(w2v, sentence, vectorSize)
 
         for j, option in enumerate(options):
-            option = sanitize(option)
+            option = sanitize(lower_tr_utf8(option))
             optionVector = sentenceVector(w2v, option, vectorSize)
             d[i, j] = 1.0 / distance(optionVector, sVector)
 
@@ -113,13 +113,12 @@ def sentenceBased_matrix2vector(d, isSimilarity, name=""):
     else:
         similarities = [x+0.00001 for x in similarities]  # 0'a bolme hatasi icin
         s = sum(1.0/x for x in similarities)
-        # s = sum(similarities)
 
         prob = [(1.0/x)/s for x in similarities]
         # print(name, prob)
 
 
-    assert(sum(prob) < 1.001 and sum(prob) > 0.999)
+    # assert(sum(prob) < 1.001 and sum(prob) > 0.999)
     return prob
 
 
@@ -130,7 +129,7 @@ def most_frequent(List):
     return max(set(List), key = List.count)
 
 
-def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
+def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None, useSentences=True):
     simQuestionCount = 0
     correctSimQuestion = 0
     correctAnswers = set()
@@ -165,8 +164,9 @@ def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
         probC = np.array(probC)
 
 
-        # UYARI: burada noktalama kaldirilirsa paragraf-cumle benzerligi olarak calisir. (cumleleri boldukten sonra kendisi noktalamayi kaldiriyor)
-        # paragraph = removePunctuation(paragraph)
+        if useSentences == False:
+            # UYARI: burada noktalama kaldirilirsa paragraf-cumle benzerligi olarak calisir. (cumleleri boldukten sonra kendisi noktalamayi kaldiriyor)
+            paragraph = removePunctuation(paragraph)
 
         if wordVectors:
             m3 = wordVectors_matrix_prob(wordVectors, paragraph, options, isSimilarity, size_wv)
@@ -178,22 +178,11 @@ def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
             probE = sentenceBased_matrix2vector(m4, isSimilarity)
 
 
-        # prob = probA
-        # prob = probC
+        # prob = probA + probC  # N-Gram + TF-IDF
+        # prob = probA + probD  # N-Gram + kelime vektoru
+        prob = probC + probD  # TF-IDF + kelime vektoru
+        # prob = probA + probC + probD  # N-Gram + TF-IDF + kelime vektoru
 
-        # prob = probA + probC
-
-        # en iyi sonuc
-        prob = probA + probC + probD
-        # prob = probA + probA2 + probC + probD
-
-        # prob = probA + probD
-        # prob = probA2 + probD
-
-        # prob = probC + probD
-
-        # prob = probA + probC + probD + probE
-        # prob = probA + probA2 + probC + probD + probE
         predicted = np.argmax(prob)
 
         # A = [probA, probA2, probC, probD, probE]
@@ -222,20 +211,24 @@ def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
 if __name__ == "__main__":
 
     size_wv = 100
-    wordVectors = load_vectors("./_tmp/haber_ve_koseyazilari_sg_size100_iter10_window5.txt")  # %37.93  - p-c:??
+
+    # wordVectors = load_vectors("./_tmp/haber_ve_koseyazilari_sg_size100_iter10_window5.txt")  # word2vec A
+    # wordVectors = load_vectors("/mnt/odev-4/vectors/tamami_sg_window5_size100.txt")  # word2vec B
+
+    # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/haber_ve_koseyazilari-skipgram-default.txt.vec")  # FastText A
+    # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/skipgram-cbow-default.txt.vec")  # FastText B
+
+
     # wordVectors = load_vectors("/mnt/odev-4/vectors/haber_ve_koseyazilari_cbow_size100_iter10_window5.txt")  # 34.40
-    # wordVectors = load_vectors("/mnt/odev-4/vectors/tamami_sg_window5_size100.txt")  # 36.38  - p-c:??
     # wordVectors = load_vectors("/mnt/odev-4/vectors/tamami_cbow_window5_size100.txt")  # 31.42
-    # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/haber_ve_koseyazilari-skipgram-default.txt.vec")  # ??? -p-c:?
     # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/haber_ve_koseyazilari-cbow-default.txt.vec")  # 31.53
     # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/tamami-cbow-default.txt.vec")  # 30.54
-    # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/skipgram-cbow-default.txt.vec")  # 34.73   - p-c: ???
 
     # wordVectors = None
 
 
-    # size_wv = 300
-    # wordVectors = load_vectors("./_tmp/wiki.tr.vec")  # ???  - p-c:
+    size_wv = 300
+    wordVectors = load_vectors("./_tmp/wiki.tr.vec")  # FastText C
 
     wordVectors_2 = None
     size_wv_2 = None
@@ -245,7 +238,8 @@ if __name__ == "__main__":
 
     results = np.zeros((4,),dtype=int)
 
-    for filePath in ('data.json', 'yenisorular/farkliYeniSorular.json'):
+    # for filePath in ('data-500.json', 'yenisorular/farkliYeniSorular.json'):
+    for filePath in ['data-907.json']:
         print(filePath)
         data = json.load(open(filePath, encoding="utf-8"))
         _, r = run(data, wordVectors, size_wv, wordVectors_2, size_wv_2)

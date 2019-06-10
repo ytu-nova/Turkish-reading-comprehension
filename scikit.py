@@ -87,7 +87,7 @@ unsim = {'nb': 0, 'sgd': 0, 'rf': 0, 'lr': 0, 'kn': 0}
 simCount = 0
 unsimCount = 0
 
-with open('data.json') as json_file:
+with open('data-907.json') as json_file:
     data = json.load(json_file)
     for q in data:
         data, labels, test = process_data(q, True)
