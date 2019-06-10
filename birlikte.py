@@ -104,14 +104,22 @@ def ngram_v2_matrix_prob(N, paragraph, options, isSimilarity):
     return d
 
 
-def sentenceBased_matrix2vector(d, isSimilarity):
+def sentenceBased_matrix2vector(d, isSimilarity, name=""):
     similarities = [max(d[:, j]) for j in range(d.shape[1])]
-    s = sum(similarities)
+
     if isSimilarity:
+        s = sum(similarities)
         prob = [x/s for x in similarities]
     else:
-        similarities = [x+0.001 for x in similarities]  # 0'a bolme hatasi icin
-        prob = [(1/x)/s for x in similarities]
+        similarities = [x+0.00001 for x in similarities]  # 0'a bolme hatasi icin
+        s = sum(1.0/x for x in similarities)
+        # s = sum(similarities)
+
+        prob = [(1.0/x)/s for x in similarities]
+        # print(name, prob)
+
+
+    assert(sum(prob) < 1.001 and sum(prob) > 0.999)
     return prob
 
 
@@ -153,7 +161,7 @@ def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
 
 
         m2 = nb_matrix_prob(q, isSimilarity)
-        probC = sentenceBased_matrix2vector(m2, isSimilarity)
+        probC = sentenceBased_matrix2vector(m2, isSimilarity, "probC")
         probC = np.array(probC)
 
 
@@ -162,7 +170,7 @@ def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
 
         if wordVectors:
             m3 = wordVectors_matrix_prob(wordVectors, paragraph, options, isSimilarity, size_wv)
-            probD = sentenceBased_matrix2vector(m3, isSimilarity)
+            probD = sentenceBased_matrix2vector(m3, isSimilarity, "probD")
             probD = np.array(probD)
 
         if wordVectors_2 != None:
@@ -170,14 +178,18 @@ def run(data, wordVectors, size_wv, wordVectors_2=None, size_wv_2=None):
             probE = sentenceBased_matrix2vector(m4, isSimilarity)
 
 
-        # prob = probD
+        # prob = probA
+        # prob = probC
 
         # prob = probA + probC
 
         # en iyi sonuc
         prob = probA + probC + probD
+        # prob = probA + probA2 + probC + probD
 
         # prob = probA + probD
+        # prob = probA2 + probD
+
         # prob = probC + probD
 
         # prob = probA + probC + probD + probE
@@ -211,7 +223,6 @@ if __name__ == "__main__":
 
     size_wv = 100
     wordVectors = load_vectors("./_tmp/haber_ve_koseyazilari_sg_size100_iter10_window5.txt")  # %37.93  - p-c:??
-    # wordVectors = None
     # wordVectors = load_vectors("/mnt/odev-4/vectors/haber_ve_koseyazilari_cbow_size100_iter10_window5.txt")  # 34.40
     # wordVectors = load_vectors("/mnt/odev-4/vectors/tamami_sg_window5_size100.txt")  # 36.38  - p-c:??
     # wordVectors = load_vectors("/mnt/odev-4/vectors/tamami_cbow_window5_size100.txt")  # 31.42
@@ -219,6 +230,8 @@ if __name__ == "__main__":
     # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/haber_ve_koseyazilari-cbow-default.txt.vec")  # 31.53
     # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/tamami-cbow-default.txt.vec")  # 30.54
     # wordVectors = load_vectors("/mnt/odev-4/fasttext-vectors/skipgram-cbow-default.txt.vec")  # 34.73   - p-c: ???
+
+    # wordVectors = None
 
 
     # size_wv = 300

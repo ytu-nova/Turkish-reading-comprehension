@@ -45,7 +45,7 @@ def predict_char_ngram(N, paragraph, question, options, isSimilarity):
     if isSimilarity:
         prob = [x / sum(similarities) for x in similarities]
     else:
-        similarities = [x+0.001 for x in similarities]  # 0'a bolme hatasi icin
+        similarities = [x+0.00001 for x in similarities]  # 0'a bolme hatasi icin
         prob = [(1/x) / sum(1/y for y in similarities) for x in similarities]
     return prob
 
